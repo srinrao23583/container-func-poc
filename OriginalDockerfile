@@ -1,0 +1,32 @@
+ARG JAVA_VERSION=17
+# This image additionally contains function core tools – useful when using custom extensions
+#FROM mcr.microsoft.com/azure-functions/java:4-java$JAVA_VERSION-core-tools AS installer-env
+FROM mcr.microsoft.com/azure-functions/java:4-java$JAVA_VERSION-build AS installer-env
+
+COPY . /src/java-function-app
+RUN cd /src/java-function-app && \
+    mkdir -p /home/site/wwwroot && \
+    mvn clean package && \
+    cd ./target/azure-functions/ && \
+    cd $(ls -d */|head -n 1) && \
+    cp -a . /home/site/wwwroot
+
+# This image is ssh enabled
+FROM mcr.microsoft.com/azure-functions/java:4-java$JAVA_VERSION-appservice
+# This image isn't ssh enabled
+#FROM mcr.microsoft.com/azure-functions/java:4-java$JAVA_VERSION
+
+ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
+    AzureFunctionsJobHost__Logging__Console__IsEnabled=true
+    
+RUN apt-get update && \
+    apt-get install -y gconf-service libasound2 libatk1.0-0 libatk-bridge2.0-0 libc6 \
+    libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 \
+    libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 \
+    libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 \
+    libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation \
+    libappindicator1 libnss3 lsb-release xdg-utils wget \
+    # For (newer) Chromium
+    libgbm1
+
+COPY --from=installer-env ["/home/site/wwwroot", "/home/site/wwwroot"]

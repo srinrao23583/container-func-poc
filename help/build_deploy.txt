@@ -1,0 +1,27 @@
+Build Image:
+-----------
+docker build --tag browsercontainer.azurecr.io/browserfunc:v1.0.2 .
+
+List Images:
+------------
+docker images
+
+Run the container:
+------------------
+docker run -p 8080:80 -it browsercontainer.azurecr.io/browserfunc:v1.0.2
+
+Local Url:
+----------
+http://localhost:8080/api/AlertEMail?name=Functions
+
+Push image to Azure Container Registry:
+---------------------------------------
+az acr login --name browsercontainer
+
+docker tag browsercontainer.azurecr.io/browserfunc:v1.0.2 browsercontainer.azurecr.io/browserfunc:v1.0.2
+docker push browsercontainer.azurecr.io/browserfunc:v1.0.2
+
+Function Url:
+-------------
+https://container-func-poc.azurewebsites.net/api/AlertEMail?name=Functions
+
